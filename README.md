@@ -92,4 +92,6 @@ tu-repositorio/
 ```
 ---
 
+fastapi dev main.py
+
 
