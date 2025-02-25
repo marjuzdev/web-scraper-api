@@ -57,6 +57,8 @@ markupsafe==3.0.2
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
+motor==3.7.0
+    # via -r requirements.in
 pydantic==2.10.6
     # via fastapi
 pydantic-core==2.27.2
@@ -64,7 +66,9 @@ pydantic-core==2.27.2
 pygments==2.19.1
     # via rich
 pymongo==4.11.1
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   motor
 python-dotenv==1.0.1
     # via uvicorn
 python-multipart==0.0.20
