@@ -32,5 +32,5 @@ class MongoDB:
 # Factory Method para inyección de dependencias
 async def get_database() -> AsyncIOMotorDatabase:
     mongo = MongoDB()
-    await mongo.init_connection()  # Asegura que la conexión se inicialice correctamente
+    await mongo.init_connection()
     return mongo.get_db()
