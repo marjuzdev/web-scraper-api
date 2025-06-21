@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from bson import ObjectId
+from bson import ObjectId, errors
 
 class ProductRepository:
 
@@ -23,7 +23,11 @@ class ProductRepository:
         
         except Exception as error:
             print(f"Error: {error}")
-            raise error
-
+            if isinstance(error, errors.InvalidId):
+                raise HTTPException(status_code=400, detail="ID inválido")
+            if isinstance(error, HTTPException):
+                raise error
+            raise HTTPException(status_code=500, detail="Error al buscar el producto")
+    
 
 

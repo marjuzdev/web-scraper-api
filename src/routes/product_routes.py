@@ -28,7 +28,7 @@ async def get_product(
     try:
         repository = ProductRepository(db)
         service = ProductService(repository)
-        product = await service.get_product(ObjectId(product_id))
+        product = await service.get_product(product_id)
         return product
     
     except Exception as error: 
