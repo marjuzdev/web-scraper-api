@@ -4,7 +4,7 @@ from repositories.product_repository import ProductRepository
 from schemas.product import ProductModel, ProductSchema
 from services.product_service import ProductService
 from motor.motor_asyncio import AsyncIOMotorDatabase
-
+from bson import ObjectId
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -28,7 +28,7 @@ async def get_product(
     try:
         repository = ProductRepository(db)
         service = ProductService(repository)
-        product = await service.get_product(product_id)
+        product = await service.get_product(ObjectId(product_id))
         return product
     
     except Exception as error: 
