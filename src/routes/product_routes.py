@@ -1,6 +1,3 @@
-# import os 
-# os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "0"
-
 from fastapi import APIRouter, Depends, HTTPException
 from playwright.async_api import async_playwright
 from motor.motor_asyncio import AsyncIOMotorDatabase
