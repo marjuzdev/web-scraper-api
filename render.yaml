@@ -9,4 +9,4 @@ services:
       pip install -r requirements.txt
       playwright install
       ls ~/.cache/ms-playwright
-    startCommand: PYTHONPATH=./src uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    startCommand: PLAYWRIGHT_BROWSERS_PATH=0 PYTHONPATH=./src uvicorn src.main:app --host 0.0.0.0 --port $PORT
