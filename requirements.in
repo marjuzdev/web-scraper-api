@@ -3,5 +3,5 @@ pymongo
 motor
 # python-dotenv
 playwright
-uvicorn
+# uvicorn
 watchfiles
