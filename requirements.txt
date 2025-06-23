@@ -111,6 +111,7 @@ typing-extensions==4.12.2
     #   uvicorn
 uvicorn[standard]==0.34.0
     # via
+    #   -r requirements.in
     #   fastapi
     #   fastapi-cli
 watchfiles==1.0.4
