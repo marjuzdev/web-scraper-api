@@ -1,4 +1,7 @@
 fastapi[standard]
 pymongo
 motor
-python-dotenv
+# python-dotenv
+playwright
+# uvicorn[standard]
+watchfiles

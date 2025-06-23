@@ -44,4 +44,14 @@ pip-compile $INPUT_FILE --output-file $OUTPUT_FILE
 echo "Sincronizando el entorno con $OUTPUT_FILE..."
 pip-sync $OUTPUT_FILE
 
+# Instalar solo Chromium para playwright
+CHROMIUM_EXEC=$(find "$HOME/AppData/Local/ms-playwright" -type f -name headless_shell.exe 2>/dev/null | head -n 1)
+
+if [ -f "$CHROMIUM_EXEC" ]; then
+    echo "Chromium ya está instalado. ✅"
+else
+    echo "Instalando Chromium para Playwright..."
+    python -m playwright install chromium
+fi
+
 echo "¡Proceso completado!"

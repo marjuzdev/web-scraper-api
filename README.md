@@ -91,7 +91,7 @@ tu-repositorio/
 └── README.md               # Este archivo
 ```
 ---
+ $env:PYTHONPATH = "./src"; watchfiles 'uvicorn src.main:app'
 
-fastapi dev main.py
 
 
