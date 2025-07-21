@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from playwright.async_api import async_playwright
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from schemas.product import ProductModel, ProductSchema
+from schemas.product import ProductSchema
 from services.product_service import ProductService
 from repositories.product_repository import ProductRepository
 from database.config import get_database
