@@ -16,3 +16,8 @@ class MarketplaceSchema(BaseSchema):
     css_selectors: CssSelectors = Field(...)
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class MarketplaceUpdateSchema(BaseModel):
+    name: Optional[str] = None
+    url_base: Optional[str] = Field(None)

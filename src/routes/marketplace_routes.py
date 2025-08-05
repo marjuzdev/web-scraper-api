@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from database.config import get_database
 from fastapi import APIRouter
-from schemas.marketplace import MarketplaceSchema
+from schemas.marketplace import MarketplaceSchema, MarketplaceUpdateSchema
 from services.marketplace_service import  MarketplaceService
 
 router = APIRouter(prefix="/marketplace", tags=["marketplace"])
@@ -23,6 +23,28 @@ async def create_marketplace(
  ):
     service = MarketplaceService(db)
     result = await service.save(marketplace)
-    return {"message": "Tienda registrada correctamente", "marketplace": result}
+    return {"message": "Marketplace correctly registered", "marketplace": result}
+
+@router.delete("/{marketplace_id}")
+async def delete_marketplace(
+    marketplace_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    service = MarketplaceService(db)
+    await service.delete(marketplace_id)
+    return {"message": "Marketplace deleted successfully"}
+
+@router.put("/{marketplace_id}")
+async def update_marketplace(
+    marketplace_id: str,
+    marketplace: MarketplaceUpdateSchema,
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    service = MarketplaceService(db)
+    result = await service.update(marketplace_id, marketplace )
+    return {
+        "message": "Marketplace updated successfully",
+        "marketplace": result
+    }
 
 
