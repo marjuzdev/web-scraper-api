@@ -2,8 +2,9 @@ from repositories.product_repository import ProductRepository
 from schemas.product import ProductSchema
 
 class ProductService:
-    def __init__(self, repository: ProductRepository):
-        self.repository = repository
+
+    def __init__(self, db ):
+        self.repository = ProductRepository(db)
 
     async def create_product(self, product: ProductSchema):
         product_dict = product.model_dump()

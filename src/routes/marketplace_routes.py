@@ -1,7 +1,5 @@
 from typing import List
-from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.encoders import jsonable_encoder
+from fastapi import APIRouter, Depends
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from database.config import get_database
 from fastapi import APIRouter

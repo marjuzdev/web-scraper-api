@@ -4,7 +4,6 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from schemas.product import ProductSchema
 from services.product_service import ProductService
-from repositories.product_repository import ProductRepository
 from database.config import get_database
 
 
@@ -39,8 +38,7 @@ async def get_product(
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
     try:
-        repository = ProductRepository(db)
-        service = ProductService(repository)
+        service = ProductService(db)
         product = await service.get_product(product_id)
         return product
     
@@ -48,14 +46,12 @@ async def get_product(
         print('Ha occurido un problema', error)
         raise HTTPException(status_code=400, detail=f"Error: {str(error)}")
     
-
 @router.post("/")
 async def create_product(
     product: ProductSchema,
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
-    repository = ProductRepository(db)
-    service = ProductService(repository)
+    service = ProductService(db)
     result = await service.create_product(product)
     return {"message": "Producto registrado con éxito", "product": result}
 

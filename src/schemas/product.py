@@ -11,5 +11,3 @@ class ProductSchema(BaseModel):
     class Config:
         allow_population_by_field_name = True  # Permite usar "id" o "_id"
         json_encoders = {ObjectId: str}  # Convierte ObjectId a str en respuestas JSON
-    
-

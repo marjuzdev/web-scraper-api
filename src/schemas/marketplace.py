@@ -12,6 +12,7 @@ class MarketplaceSchema(BaseSchema):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     name: str = Field(...)
     url_base: str = Field(...)
+    country: Optional[str] = Field(None)
     css_selectors: CssSelectors = Field(...)
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))

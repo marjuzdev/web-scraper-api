@@ -1,7 +1,5 @@
 from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from bson import ObjectId, errors
-
 from schemas.marketplace import MarketplaceSchema
 
 class MarketPlaceRepository:
@@ -21,10 +19,8 @@ class MarketPlaceRepository:
    
     async def get_all(self):
         try:
-
             marketplaces = await self.collection.find().to_list(length=100)
             return marketplaces
-
 
         except Exception as error:
             print(f"Get all marketplaces: {error}")
