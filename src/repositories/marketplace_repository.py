@@ -1,10 +1,9 @@
 from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
-import logging
+from logger import configure_logger
 
-logger = logging.getLogger(__name__)
-
+logger = configure_logger()
 
 class MarketPlaceRepository:
 
@@ -50,25 +49,26 @@ class MarketPlaceRepository:
             raise HTTPException(status_code=500, detail="Failed to retrieve marketplace")
 
     async def update(self, marketplace_id: str, update_data: dict):
-        try:
-            if not ObjectId.is_valid(marketplace_id):
-                raise HTTPException(status_code=400, detail="Invalid ID format")
+            try:
+                if not ObjectId.is_valid(marketplace_id):
+                    raise HTTPException(status_code=400, detail="Invalid ID format")
 
-            result = await self.collection.update_one(
-                {"_id": ObjectId(marketplace_id)},
-                {"$set": update_data}
-            )
+                result = await self.collection.update_one(
+                    {"_id": ObjectId(marketplace_id)},
+                    {"$set": update_data}
+                )
 
-            if result.matched_count == 0:
-                raise HTTPException(status_code=404, detail="Marketplace not found")
+                if result.matched_count == 0:
+                    raise HTTPException(status_code=404, detail="Marketplace not found")
 
-            return {"updated": True}
+                return {"updated": True}
 
-        except HTTPException:
-            raise
-        except Exception:
-            logger.exception("Unexpected error while updating marketplace")
-            raise HTTPException(status_code=500, detail="Failed to update marketplace")
+            except HTTPException as e:
+                logger.error(f"HTTPException: {e.detail}")
+                raise e
+            except Exception as e:
+                logger.exception(f"Unexpected error while updating marketplace: {str(e)}")
+                raise HTTPException(status_code=500, detail="Failed to update marketplace") 
 
     async def delete(self, marketplace_id: str):
         try:
