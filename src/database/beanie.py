@@ -1,11 +1,8 @@
 import os
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from beanie import init_beanie
-from entities.marketplace_entity import MarketplaceEntity
+from entities import all_entities 
 
-all_models = [
-    # MarketplaceEntity
-]
 
 class MongoDBBeanie:
     """Singleton para conexión con Beanie."""
@@ -28,9 +25,9 @@ class MongoDBBeanie:
             self.client = AsyncIOMotorClient(uri)
             self.db: AsyncIOMotorDatabase = self.client[self.database_name]
 
-            if all_models:
-                await init_beanie(database=self.db, document_models=all_models)
-                print(f"✅ Conectado a MongoDB con Beanie ({len(all_models)} modelos)")
+            if all_entities:
+                await init_beanie(database=self.db, document_models=all_entities)
+                print(f"✅ Conectado a MongoDB con Beanie ({len(all_entities)} modelos)")
             else:
                 print("⚠️ No se registraron modelos en Beanie (lista vacía)")
 

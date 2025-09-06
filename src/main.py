@@ -1,17 +1,19 @@
 
+
 from dotenv import load_dotenv
+
+from entities import TestEntity
 load_dotenv()
 
 from contextlib import asynccontextmanager
 
 from database import MongoDBBeanie
 
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
 from routes.product_routes import router as product_routes
 from routes.marketplace_routes import router as marketplace_routes
 from playwright.async_api import async_playwright
 from logger import configure_logger
-
 
 logger = configure_logger()
 
@@ -55,3 +57,16 @@ async def get_quotes():
 
     except Exception as e:
         return {"error": str(e)}
+    
+
+@app.get("/beanie")
+async def beanie():
+    try:
+        test = TestEntity(name="Ejemplo", url_base="http://test.com", country="CO")
+        await test.insert()
+        return test.model_dump()
+    except HTTPException:
+            raise
+    except Exception:
+            logger.exception("Unexpected error while retrieving marketplace by ID")
+            raise HTTPException(status_code=500, detail="Failed to retrieve t")
