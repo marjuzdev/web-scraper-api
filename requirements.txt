@@ -11,12 +11,15 @@ anyio==4.8.0
     #   httpx
     #   starlette
     #   watchfiles
+beanie==2.0.0
+    # via -r requirements.in
 certifi==2025.1.31
     # via
     #   httpcore
     #   httpx
 click==8.1.8
     # via
+    #   beanie
     #   rich-toolkit
     #   typer
     #   uvicorn
@@ -55,6 +58,8 @@ idna==3.10
     #   httpx
 jinja2==3.1.5
     # via fastapi
+lazy-model==0.3.0
+    # via beanie
 markdown-it-py==3.0.0
     # via rich
 markupsafe==3.0.2
@@ -66,7 +71,10 @@ motor==3.7.0
 playwright==1.52.0
     # via -r requirements.in
 pydantic==2.10.6
-    # via fastapi
+    # via
+    #   beanie
+    #   fastapi
+    #   lazy-model
 pydantic-core==2.27.2
     # via pydantic
 pyee==13.0.0
@@ -76,6 +84,7 @@ pygments==2.19.1
 pymongo==4.11.1
     # via
     #   -r requirements.in
+    #   beanie
     #   motor
 python-dotenv==1.0.1
     # via uvicorn
@@ -100,6 +109,7 @@ typer==0.15.1
 typing-extensions==4.12.2
     # via
     #   anyio
+    #   beanie
     #   exceptiongroup
     #   fastapi
     #   pydantic
