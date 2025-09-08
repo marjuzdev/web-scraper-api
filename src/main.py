@@ -3,6 +3,8 @@
 from dotenv import load_dotenv
 
 from entities import TestEntity
+from schemas.responses import ResponseModel
+from schemas.test import TestSchema
 load_dotenv()
 
 from contextlib import asynccontextmanager
@@ -70,3 +72,26 @@ async def beanie():
     except Exception:
             logger.exception("Unexpected error while retrieving marketplace by ID")
             raise HTTPException(status_code=500, detail="Failed to retrieve t")
+    
+
+
+@app.post("/beanie", response_model=ResponseModel)
+async def create_test(test_schema: TestSchema):
+    try:
+        data = test_schema.model_dump()
+        data["url_base"] = str(data["url_base"])
+        test = TestEntity(**data)
+        await test.insert()
+
+        response = ResponseModel(
+            message="TestEntity creada exitosamente",
+            data = test
+        )
+        return response
+        
+    except Exception:
+        logger.exception("Unexpected error while creating TestEntity")
+        raise HTTPException(status_code=500, detail="Failed to create entity")
+
+
+
