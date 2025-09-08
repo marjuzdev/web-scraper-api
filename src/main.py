@@ -2,18 +2,15 @@
 
 from dotenv import load_dotenv
 
-from entities import TestEntity
-from schemas.responses import ResponseModel
-from schemas.test import TestSchema
+
 load_dotenv()
 
 from contextlib import asynccontextmanager
-
 from database import MongoDBBeanie
-
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter
 from routes.product_routes import router as product_routes
 from routes.marketplace_routes import router as marketplace_routes
+from routes.test_routes import router as test_routes
 from playwright.async_api import async_playwright
 from logger import configure_logger
 
@@ -30,6 +27,8 @@ api_router = APIRouter(prefix="/api")
 
 api_router.include_router(product_routes)
 api_router.include_router(marketplace_routes)
+api_router.include_router(test_routes)
+
 app.include_router(api_router)
 
 @app.get("/")
@@ -59,39 +58,3 @@ async def get_quotes():
 
     except Exception as e:
         return {"error": str(e)}
-    
-
-@app.get("/beanie")
-async def beanie():
-    try:
-        test = TestEntity(name="Ejemplo", url_base="http://test.com", country="CO")
-        await test.insert()
-        return test.model_dump()
-    except HTTPException:
-            raise
-    except Exception:
-            logger.exception("Unexpected error while retrieving marketplace by ID")
-            raise HTTPException(status_code=500, detail="Failed to retrieve t")
-    
-
-
-@app.post("/beanie", response_model=ResponseModel)
-async def create_test(test_schema: TestSchema):
-    try:
-        data = test_schema.model_dump()
-        data["url_base"] = str(data["url_base"])
-        test = TestEntity(**data)
-        await test.insert()
-
-        response = ResponseModel(
-            message="TestEntity creada exitosamente",
-            data = test
-        )
-        return response
-        
-    except Exception:
-        logger.exception("Unexpected error while creating TestEntity")
-        raise HTTPException(status_code=500, detail="Failed to create entity")
-
-
-
