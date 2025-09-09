@@ -1,35 +1,81 @@
-# from ..entities.product_entity import
-
 from typing import Optional
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from .constants.marketplaces import marketplaces_data
-from .constants.products import products_data
+from entities.product_entity import ProductEntity
+from entities.marketplace_entity import MarketplaceEntity
+from entities.product_market_entity import ProductMarketEntity
+from entities.price_history_entity import PriceHistoryEntity
 from entities.test_entity import TestEntity
+
+from seed.constants.products import products_data
+from seed.constants.marketplaces import marketplaces_data
+from seed.constants.product_market import product_market_data
+from seed.constants.price_history import price_history_data
 from logger import configure_logger
 
 logger = configure_logger()
 
 class SeedService:
-
-    def __init__(self, db: Optional[AsyncIOMotorDatabase] = None ):
+    def __init__(self, db: Optional[AsyncIOMotorDatabase] = None):
         self.db = db
 
     async def execute_seed(self):
+        logger.info("Ejecutando seed...")
 
-        docs = await self.db['marketplaces'].find().to_list(length=100)
-        return [
-            {**doc, "_id": str(doc["_id"])} 
-            if "_id" in doc and isinstance(doc["_id"], ObjectId) else doc
-            for doc in docs
-        ]
+        await TestEntity.delete_all()
+        await ProductEntity.delete_all()
+        await MarketplaceEntity.delete_all()
+        await ProductMarketEntity.delete_all()
+        await PriceHistoryEntity.delete_all()
 
+        # # Insertar marketplaces
+        marketplaces = [MarketplaceEntity(**data) for data in marketplaces_data]
+        await MarketplaceEntity.insert_many(marketplaces)
+        logger.info(f"Inserted {len(marketplaces)} marketplaces")
+        # # Insertar productos
+        products = [ProductEntity(**data) for data in products_data]
+        await ProductEntity.insert_many(products)
+        logger.info(f"Inserted {len(products)} products")
 
-        # docs = await self.db.collection['test'].find().to_list(length=100)
-        # return [
-        #     {**doc, "_id": str(doc["_id"])} 
-        #     if "_id" in doc and isinstance(doc["_id"], ObjectId) else doc
-        #     for doc in docs
-        # ]
+        # Insertar product_market
+        product_markets = []
+        for pm in product_market_data:
+            product = await ProductEntity.find_one(ProductEntity.name == pm["product_name"])
+            marketplace = await MarketplaceEntity.find_one(MarketplaceEntity.name == pm["marketplace_name"])
 
+            if product and marketplace:
+                product_markets.append(
+                    ProductMarketEntity(
+                        product_id=product.id,
+                        marketplace_id=marketplace.id,
+                        url=pm["url"],
+                        available=pm["available"],
+                    )
+                )
 
+        await ProductMarketEntity.insert_many(product_markets)
+        logger.info(f"Inserted {len(product_markets)} product_market entries")
+
+        histories = []
+        for ph in price_history_data:
+            product = await ProductEntity.find_one(ProductEntity.name == ph["product_name"])
+            marketplace = await MarketplaceEntity.find_one(MarketplaceEntity.name == ph["marketplace_name"])
+            product_market = await ProductMarketEntity.find_one(
+                ProductMarketEntity.product_id == product.id,
+                ProductMarketEntity.marketplace_id == marketplace.id,
+            )
+
+            if product_market:
+                histories.append(
+                    PriceHistoryEntity(
+                        product_market_id=product_market.id,
+                        price_normal=ph["price_normal"],
+                        price_discount=ph.get("price_discount"),
+                        currency=ph["currency"],
+                    )
+                )
+
+        await PriceHistoryEntity.insert_many(histories)
+        logger.info(f"Inserted {len(histories)} price_history entries")
+
+        return {"message": "Seed ejecutado correctamente"}
