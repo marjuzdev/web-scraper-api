@@ -56,26 +56,4 @@ class SeedService:
         await ProductMarketEntity.insert_many(product_markets)
         logger.info(f"Inserted {len(product_markets)} product_market entries")
 
-        histories = []
-        for ph in price_history_data:
-            product = await ProductEntity.find_one(ProductEntity.name == ph["product_name"])
-            marketplace = await MarketplaceEntity.find_one(MarketplaceEntity.name == ph["marketplace_name"])
-            product_market = await ProductMarketEntity.find_one(
-                ProductMarketEntity.product_id == product.id,
-                ProductMarketEntity.marketplace_id == marketplace.id,
-            )
-
-            if product_market:
-                histories.append(
-                    PriceHistoryEntity(
-                        product_market_id=product_market.id,
-                        price_normal=ph["price_normal"],
-                        price_discount=ph.get("price_discount"),
-                        currency=ph["currency"],
-                    )
-                )
-
-        await PriceHistoryEntity.insert_many(histories)
-        logger.info(f"Inserted {len(histories)} price_history entries")
-
         return {"message": "Seed ejecutado correctamente"}
