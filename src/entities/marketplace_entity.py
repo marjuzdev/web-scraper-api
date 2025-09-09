@@ -17,6 +17,3 @@ class MarketplaceEntity(Document):
 
     class Settings:
         name = "marketplaces"
-
-    def has_discount(self) -> bool:
-        return self.css_selectors.price_discount is not None
