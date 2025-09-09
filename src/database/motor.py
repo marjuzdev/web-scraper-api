@@ -33,11 +33,3 @@ class MongoDBMotor:
         mongo = cls()
         await mongo.init_connection()
         return mongo.get_db()
-
-# # Factory Method para inyección de dependencias
-# async def get_database() -> AsyncIOMotorDatabase:
-#     mongo = MongoDBMotor()
-#     await mongo.init_connection()
-#     return mongo.get_db()
-
-

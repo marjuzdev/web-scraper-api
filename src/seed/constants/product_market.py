@@ -1,0 +1,1 @@
+products_market_data = []
