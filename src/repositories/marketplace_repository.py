@@ -27,7 +27,13 @@ class MarketPlaceRepository:
 
     async def get_all(self):
         try:
-            return await self.collection.find().to_list(length=100)
+            docs = await self.collection.find().to_list(length=100)
+            return [
+                {**doc, "_id": str(doc["_id"])} 
+                if "_id" in doc and isinstance(doc["_id"], ObjectId) else doc
+                for doc in docs
+            ]
+        
         except Exception:
             logger.exception("Unexpected error while listing marketplaces")
             raise HTTPException(status_code=500, detail="Failed to list marketplaces")

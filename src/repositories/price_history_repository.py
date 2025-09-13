@@ -42,7 +42,7 @@ class PriceHistoryRepository:
     async def get_all(self):
         try:
 
-            docs = await PriceHistoryEntity.find().to_list(100)
+            docs = await PriceHistoryEntity.find().to_list()
             return [
                 {**doc, "_id": str(doc["_id"])} 
                 if "_id" in doc and isinstance(doc["_id"], ObjectId) else doc

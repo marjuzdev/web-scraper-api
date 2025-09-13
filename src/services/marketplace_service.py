@@ -7,7 +7,7 @@ class MarketplaceService:
     
     async def get_all(self):
         return await self.repository.get_all()
-    
+       
     async def save(
         self,
         marketplace: MarketplaceSchema

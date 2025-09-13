@@ -3,92 +3,58 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from database import MongoDBMotor
 from schemas.responses import ResponseModel
 from services.price_history_service import PriceHistoryService
-from schemas.price_history import PriceHistoryCreateSchema, PriceHistoryFilterSchema, PriceHistoryUpdateSchema
+from schemas.price_history import (
+    PriceHistoryCreateSchema,
+    PriceHistoryFilterSchema,
+    PriceHistoryUpdateSchema,
+)
+from services.product_market_service import ProductMarketService
+from services.product_service import ProductService
+from services.marketplace_service import MarketplaceService
+
 
 router = APIRouter(prefix="/price_history", tags=["PriceHistory"])
 
-def get_service( db: AsyncIOMotorDatabase = Depends(MongoDBMotor.get_database)):
-    return PriceHistoryService(db)
-
-
-@router.post("/", response_model=ResponseModel)
-async def create_test( data: PriceHistoryCreateSchema, service: PriceHistoryService = Depends(get_service)):
-    test_id = await service.save(data)
-    return ResponseModel(
-        success=True,
-        message="Price creado correctamente",
-        data={"id": test_id},
-        errors=None
-    )
-
-@router.get("/filter")
-async def filter_test(
-    filters: PriceHistoryFilterSchema = Depends(),
-    service: PriceHistoryService = Depends(get_service)
+def get_product_market_service(
+    db: AsyncIOMotorDatabase = Depends(MongoDBMotor.get_database),
 ):
-    result = await service.raw_find(filters)
-    return ResponseModel(
-        success=True,
-        message="Tests filtrados correctamente",
-        data= result,
-        errors=None
-    )
+    return ProductMarketService(db)
 
 
-@router.get("/{test_id}", response_model=ResponseModel)
-async def get_test(test_id: str, service: PriceHistoryService = Depends(get_service)):
-    entity = await service.get_by_id(test_id)
-    if not entity:
-        raise HTTPException(status_code=404, detail="Entity not found")
-    
-    return ResponseModel(
-        success=True,
-        message="Test obtenido correctamente",
-        data= entity,
-        errors=None
+def get_product_service(
+    db: AsyncIOMotorDatabase = Depends(MongoDBMotor.get_database),
+):
+    return ProductService(db)
+
+
+def get_marketplace_service(
+    db: AsyncIOMotorDatabase = Depends(MongoDBMotor.get_database),
+):
+    return MarketplaceService(db)
+
+
+def get_price_history_service(
+    db: AsyncIOMotorDatabase = Depends(MongoDBMotor.get_database),
+    product_service: ProductService = Depends(get_product_service),
+    marketplace_service: MarketplaceService = Depends(get_marketplace_service),
+    product_market_service: ProductMarketService = Depends(get_product_market_service),
+):
+    return PriceHistoryService(
+        db,
+        product_service,
+        marketplace_service,
+        product_market_service,
     )
 
 @router.get("/", response_model=ResponseModel)
-async def get_all_test( service: PriceHistoryService = Depends(get_service)):
-    # entity = await service.get_all()
-    # if not entity:
-    #     raise HTTPException(status_code=404, detail="Entity not found")
+async def get_prices_by_market(
+    priceHistoryService: PriceHistoryService = Depends(get_price_history_service),
+):
+    response = await priceHistoryService.get_prices_by_market("68c08ee044b631d7a81d5907")
 
     return ResponseModel(
         success=True,
         message="Prices obtenidos correctamente",
-        data= 'entity',
-        errors=None
-    )
-
-@router.delete("/{test_id}", response_model=ResponseModel)
-async def delete_test(
-    test_id: str,
-    service: PriceHistoryService = Depends(get_service)
-):
-
-    entity = await service.delete(test_id)
-    if not entity:
-        raise HTTPException(status_code=404, detail="Entity not found")
-
-    return ResponseModel(
-        success=True,
-        message="Tests eliminados correctamente",
-        data= entity,
-        errors=None
-    )
-
-@router.put("/{test_id}", response_model=ResponseModel)
-async def update_test(
-    test_id: str,
-    test: PriceHistoryUpdateSchema,
-    service: PriceHistoryService = Depends(get_service)
-):
-    result = await service.update(test_id, test )
-
-    return ResponseModel(
-        success=True,
-        message="Tests Actulizados correctamente",
-        data= result,
-        errors=None
+        data=response,
+        errors=None,
     )

@@ -1,3 +1,4 @@
+from typing import List
 from beanie import PydanticObjectId
 from fastapi import HTTPException
 from bson import ObjectId
@@ -7,16 +8,71 @@ from entities.product_market_entity import ProductMarketEntity
 
 logger = configure_logger()
 
+
 class ProductMarketRepository:
-    
+
     def __init__(self, db: AsyncIOMotorDatabase = None):
         self.collection = db["product_market"] if db is not None else None
 
+    async def get_products_by_marketplace_agg(self, marketplace_id: str) -> List[dict]:
+
+        try:
+            pipeline = [
+                {"$match": {"marketplace_id": ObjectId(marketplace_id)}},
+                {
+                    "$lookup": {
+                        "from": "products",
+                        "localField": "product_id",
+                        "foreignField": "_id",
+                        "as": "product_info",
+                    }
+                },
+                {"$unwind": "$product_info"},
+                {
+                    "$lookup": {
+                        "from": "marketplaces",
+                        "localField": "marketplace_id",
+                        "foreignField": "_id",  
+                        "as": "marketplace_info",
+                    }
+                },
+                {"$unwind": "$marketplace_info"},
+                {
+                    "$project": {
+                        "_id": 1,
+                        "available": 1,
+                        "name": "$product_info.name",
+                        "brand": "$product_info.brand",
+                        "category": "$product_info.category",
+                        "marketplace_name": "$marketplace_info.name",
+                        "marketplace_country": "$marketplace_info.country",
+                        "product_url": {"$concat": ["$marketplace_info.url_base", "$url"]}
+                    }
+                },
+            ]
+
+            results = await self.collection.aggregate(pipeline).to_list()
+            for r in results:
+                r["_id"] = str(r["_id"])
+                
+            return results
+
+        except HTTPException as e:
+            logger.error(f"HTTPException: {e.detail}")
+            raise e
+        except Exception as e:
+            logger.exception(f"Unexpected error while fetching entities: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to fetch entities")
+
     async def save(self, entity: dict):
         try:
-            existing = await ProductMarketEntity.find_one(ProductMarketEntity.name == entity.get("name"))
+            existing = await ProductMarketEntity.find_one(
+                ProductMarketEntity.name == entity.get("name")
+            )
             if existing:
-                raise HTTPException(status_code=400, detail="Entity name already exists")
+                raise HTTPException(
+                    status_code=400, detail="Entity name already exists"
+                )
 
             new_entity = ProductMarketEntity(**entity)
             await new_entity.insert()
@@ -35,21 +91,45 @@ class ProductMarketRepository:
         if not entity:
             raise HTTPException(status_code=404, detail="Entity not found")
         return entity
-    
+
+    async def get_by_market(self, marketplace_id: str):
+        try:
+            if not PydanticObjectId.is_valid(marketplace_id):
+                raise HTTPException(status_code=400, detail="Invalid ID format")
+
+            product_markets = await ProductMarketEntity.find(
+                ProductMarketEntity.marketplace_id == ObjectId(marketplace_id)
+            ).to_list()
+
+            if not product_markets:
+                raise HTTPException(status_code=404, detail="Entities not found")
+
+            return product_markets
+
+        except HTTPException as e:
+            logger.error(f"HTTPException: {e.detail}")
+            raise e
+        except Exception as e:
+            logger.exception(f"Unexpected error while fetching entities: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to fetch entities")
+
     async def get_all(self):
         try:
 
-            docs = await ProductMarketEntity.find().to_list(100)
+            docs = await ProductMarketEntity.find().to_list()
             return [
-                {**doc, "_id": str(doc["_id"])}
-                if "_id" in doc and isinstance(doc["_id"], ObjectId) else doc
+                (
+                    {**doc, "_id": str(doc["_id"])}
+                    if "_id" in doc and isinstance(doc["_id"], ObjectId)
+                    else doc
+                )
                 for doc in docs
             ]
-        
+
         except Exception:
             logger.exception("Unexpected error while listing products by market")
             raise HTTPException(status_code=500, detail="Failed products by market")
-        
+
     async def delete(self, test_id: str):
         try:
             if not PydanticObjectId.is_valid(test_id):
@@ -66,7 +146,7 @@ class ProductMarketRepository:
         except Exception:
             logger.exception("Unexpected error while deleting test entity")
             raise HTTPException(status_code=500, detail="Failed to delete test entity")
-        
+
     async def update(self, test_id: str, update_data: dict):
         try:
             if not PydanticObjectId.is_valid(test_id):
@@ -87,12 +167,12 @@ class ProductMarketRepository:
         except Exception as e:
             logger.exception(f"Unexpected error while updating test entity: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to update test entity")
-        
+
     async def raw_find(self, filter_query: dict, limit: int = 50):
-        
+
         if self.collection is None:
             raise HTTPException(status_code=500, detail="Motor not initialized")
-         
+
         try:
             filter_mongo = {}
             if filter_query.get("name") is not None:
@@ -104,11 +184,14 @@ class ProductMarketRepository:
             docs = await self.collection.find(filter_mongo).to_list(length=limit)
 
             return [
-                {**doc, "_id": str(doc["_id"])} 
-                if "_id" in doc and isinstance(doc["_id"], ObjectId) else doc
+                (
+                    {**doc, "_id": str(doc["_id"])}
+                    if "_id" in doc and isinstance(doc["_id"], ObjectId)
+                    else doc
+                )
                 for doc in docs
             ]
-        
+
         except Exception as e:
             logger.exception(f"Error in raw find: {e}")
             raise HTTPException(status_code=500, detail="Failed raw query")

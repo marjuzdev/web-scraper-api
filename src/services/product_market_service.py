@@ -18,6 +18,12 @@ class ProductMarketService:
     async def get_all(self):
         return await self.repository.get_all()
     
+    async def get_by_market(self, marketplace_id):
+        return await self.repository.get_by_market(marketplace_id)
+    
+    async def get_products_by_marketplace_agg(self, marketplace_id):
+        return await self.repository.get_products_by_marketplace_agg(marketplace_id)
+    
     async def delete( self, test_id: str ):
         return await self.repository.delete(test_id)
     

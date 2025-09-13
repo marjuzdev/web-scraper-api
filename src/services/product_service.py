@@ -13,4 +13,7 @@ class ProductService:
 
     async def get_product(self, product_id: str):
         return await self.repository.get_product(product_id)
+    
+    async def get_all(self):
+        return await self.repository.get_all()
 

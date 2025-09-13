@@ -31,6 +31,15 @@ async def create_product(
     return {"message": "Producto registrado con éxito", "product": result}
 
 
+@router.get("/")
+async def get_all(
+    db: AsyncIOMotorDatabase = Depends(MongoDBMotor.get_database)
+):
+    service = ProductService(db)
+    result = await service.get_all()
+    return {"message": "Producto registrado con éxito", "product": result}
+
+
 
 
  
