@@ -46,7 +46,8 @@ class ProductMarketRepository:
                         "category": "$product_info.category",
                         "marketplace_name": "$marketplace_info.name",
                         "marketplace_country": "$marketplace_info.country",
-                        "product_url": {"$concat": ["$marketplace_info.url_base", "$url"]}
+                        "product_url": {"$concat": ["$marketplace_info.url_base", "$url"]},
+                        "marketplace_css_selectors": "$marketplace_info.css_selectors"
                     }
                 },
             ]
