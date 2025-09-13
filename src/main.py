@@ -7,6 +7,8 @@ from routes.product_routes import router as product_routes
 from routes.marketplace_routes import router as marketplace_routes
 from routes.test_routes import router as test_routes
 from seed.seed_routes import router as seed_routes
+from routes.product_market_routes import router as product_market_routes
+
 from playwright.async_api import async_playwright
 from logger import configure_logger
 
@@ -23,6 +25,7 @@ api_router = APIRouter(prefix="/api")
 
 api_router.include_router(product_routes)
 api_router.include_router(marketplace_routes)
+api_router.include_router(product_market_routes)
 api_router.include_router(test_routes)
 api_router.include_router(seed_routes)
 app.include_router(api_router)
