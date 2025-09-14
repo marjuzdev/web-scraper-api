@@ -29,32 +29,42 @@ class PriceHistoryService:
         self.marketplace_service = marketplace_service
         self.product_market_service = product_market_service
 
-        async def get_prices():
-            try:
-                async with async_playwright() as p:
-                    browser = await p.chromium.launch(headless=True)
-                    page = await browser.new_page()
+    async def scrape_all(self, products):
+        results = []
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()  # Usamos **una sola pestaña**
+            
+            for product in products:
+                url = product["url"]
+                selectors = product["selectors"]
+                try:
+                    await page.goto(url)
+                    data = {"url": url}
 
-                    await page.goto("https://quotes.toscrape.com")
-                    quotes = await page.query_selector_all(".quote")
+                    if selectors.get("price_normal"):
+                        el = await page.query_selector(selectors["price_normal"])
+                        data["price_normal"] = await el.inner_text() if el else None
 
-                    data = []
-                    for quote in quotes:
-                        text = await (await quote.query_selector(".text")).inner_text()
-                        author = await (await quote.query_selector(".author")).inner_text()
-                        data.append({"text": text, "author": author})
+                    if selectors.get("price_discount"):
+                        el = await page.query_selector(selectors["price_discount"])
+                        data["price_discount"] = await el.inner_text() if el else None
 
-                    await browser.close()
-                    return data
+                    results.append(data)
 
-            except Exception as e:
-                return {"error": str(e)}
+                except Exception as e:
+                    results.append({"url": url, "error": str(e)})
+
+            await browser.close()
+        return results
 
     async def get_prices_by_market(self, marketplace_id: str):
-        result = await self.product_market_service.get_products_by_marketplace_agg(
+        results = await self.product_market_service.get_products_by_marketplace_agg(
             marketplace_id
         )
-        
+
+        products = list(map(lambda data: {'url': data['product_url'], 'selectors': data['marketplace_css_selectors']}, results))
+        result= await self.scrape_all(products)
         return result
 
     async def delete(self, test_id: str):
