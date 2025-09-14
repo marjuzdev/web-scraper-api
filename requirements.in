@@ -6,3 +6,5 @@ playwright
 # uvicorn
 watchfiles
 beanie
+lxml
+beautifulsoup4

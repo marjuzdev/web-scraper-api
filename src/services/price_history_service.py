@@ -28,7 +28,6 @@ class PriceHistoryService:
         self.product_service = product_service
         self.marketplace_service = marketplace_service
         self.product_market_service = product_market_service
-        
 
         async def get_prices():
             try:
@@ -50,11 +49,14 @@ class PriceHistoryService:
 
             except Exception as e:
                 return {"error": str(e)}
-    
 
     async def get_prices_by_market(self, marketplace_id: str):
-        return await self.product_market_service.get_products_by_marketplace_agg(marketplace_id)
- 
+        result = await self.product_market_service.get_products_by_marketplace_agg(
+            marketplace_id
+        )
+        
+        return result
+
     async def delete(self, test_id: str):
         return await self.repository.delete(test_id)
 
