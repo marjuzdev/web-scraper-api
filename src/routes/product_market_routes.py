@@ -7,16 +7,9 @@ from schemas.product_market import ProductMarketUpdateSchema, ProductMarketCreat
 
 router = APIRouter(prefix="/product_market", tags=["ProductMarket"])
 
-# Inyectamos el servicio con la DB
-# def get_service():
-#     return ProductMarketervice()
-
 def get_service( db: AsyncIOMotorDatabase = Depends(MongoDBMotor.get_database)):
     return ProductMarketService(db)
 
-# -------------------------
-# RUTAS CRUD con Beanie
-# -------------------------
 @router.post("/", response_model=ResponseModel)
 async def create_test( data: ProductMarketUpdateSchema, service: ProductMarketService = Depends(get_service)):
     test_id = await service.save(data)
@@ -26,6 +19,22 @@ async def create_test( data: ProductMarketUpdateSchema, service: ProductMarketSe
         data={"id": test_id},
         errors=None
     )
+
+@router.put("/{product_market_id}", response_model=ResponseModel)
+async def update_prodcut_market(
+    product_market_id: str,
+    data: ProductMarketUpdateSchema,
+    product_market_service: ProductMarketService = Depends(get_service)
+):
+    result = await product_market_service.update(product_market_id, data )
+
+    return ResponseModel(
+        success=True,
+        message="ProductMarket Actulizados correctamente",
+        data= result,
+        errors=None
+    )
+
 
 @router.get("/filter")
 async def filter_test(
@@ -85,17 +94,3 @@ async def delete_test(
         errors=None
     )
 
-@router.put("/{test_id}", response_model=ResponseModel)
-async def update_test(
-    test_id: str,
-    test: ProductMarketFilterSchema,
-    service: ProductMarketService = Depends(get_service)
-):
-    result = await service.update(test_id, test )
-
-    return ResponseModel(
-        success=True,
-        message="ProductMarket Actulizados correctamente",
-        data= result,
-        errors=None
-    )

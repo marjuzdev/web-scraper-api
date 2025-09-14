@@ -27,9 +27,9 @@ class ProductMarketService:
     async def delete( self, test_id: str ):
         return await self.repository.delete(test_id)
     
-    async def update( self, test_id: str, test: ProductMarketUpdateSchema):
-        test_dict = test.model_dump(exclude_unset=True)
-        return await self.repository.update(test_id, test_dict )
+    async def update( self, prodcut_market_id: str, data: ProductMarketUpdateSchema):
+        data_dict = data.model_dump(exclude_unset=True)
+        return await self.repository.update(prodcut_market_id, data_dict )
     
     async def raw_find( self, filters: ProductMarketFilterSchema):
         filters = filters.model_dump(exclude_unset=True)

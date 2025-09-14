@@ -148,17 +148,17 @@ class ProductMarketRepository:
             logger.exception("Unexpected error while deleting test entity")
             raise HTTPException(status_code=500, detail="Failed to delete test entity")
 
-    async def update(self, test_id: str, update_data: dict):
+    async def update(self, product_market_id: str, update_data: dict):
         try:
-            if not PydanticObjectId.is_valid(test_id):
+            if not PydanticObjectId.is_valid(product_market_id):
                 raise HTTPException(status_code=400, detail="Invalid ID format")
 
             result = await ProductMarketEntity.find_one(
-                ProductMarketEntity.id == PydanticObjectId(test_id)
+                ProductMarketEntity.id == PydanticObjectId(product_market_id)
             ).update({"$set": update_data})
 
             if result is None:
-                raise HTTPException(status_code=404, detail="Test not found")
+                raise HTTPException(status_code=404, detail="prodcut market not found")
 
             return {"updated": True}
 
