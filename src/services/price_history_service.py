@@ -4,6 +4,7 @@ from schemas.price_history import (
     PriceHistoryCreateSchema,
     PriceHistoryFilterSchema,
     PriceHistoryUpdateSchema,
+    SyncPricesByMarketSchema,
 )
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from services.product_service import ProductService
@@ -58,7 +59,12 @@ class PriceHistoryService:
             await browser.close()
         return results
 
-    async def get_prices_by_market(self, marketplace_id: str):
+    async def get_prices_by_market(self, data: SyncPricesByMarketSchema):
+
+        data = data.model_dump(exclude_unset=True)
+
+        marketplace_id = data['marketplace_id']
+        
         results = await self.product_market_service.get_products_by_marketplace_agg(
             marketplace_id
         )

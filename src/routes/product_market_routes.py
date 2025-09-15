@@ -13,6 +13,7 @@ def get_service( db: AsyncIOMotorDatabase = Depends(MongoDBMotor.get_database)):
 @router.post("/", response_model=ResponseModel)
 async def create_test( data: ProductMarketUpdateSchema, service: ProductMarketService = Depends(get_service)):
     test_id = await service.save(data)
+
     return ResponseModel(
         success=True,
         message="Test creado correctamente",

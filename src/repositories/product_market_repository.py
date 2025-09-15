@@ -17,6 +17,9 @@ class ProductMarketRepository:
     async def get_products_by_marketplace_agg(self, marketplace_id: str) -> List[dict]:
 
         try:
+            if not ObjectId.is_valid(marketplace_id):
+                raise HTTPException(status_code=400, detail="Invalid ID format")
+        
             pipeline = [
                 {"$match": {"marketplace_id": ObjectId(marketplace_id)}},
                 {

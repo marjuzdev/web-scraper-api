@@ -4,9 +4,7 @@ from database import MongoDBMotor
 from schemas.responses import ResponseModel
 from services.price_history_service import PriceHistoryService
 from schemas.price_history import (
-    PriceHistoryCreateSchema,
-    PriceHistoryFilterSchema,
-    PriceHistoryUpdateSchema,
+    SyncPricesByMarketSchema
 )
 from services.product_market_service import ProductMarketService
 from services.product_service import ProductService
@@ -46,11 +44,12 @@ def get_price_history_service(
         product_market_service,
     )
 
-@router.get("/", response_model=ResponseModel)
-async def get_prices_by_market(
+@router.post("/", response_model=ResponseModel)
+async def sync_prices_by_MarketSchema(
+    data: SyncPricesByMarketSchema,
     priceHistoryService: PriceHistoryService = Depends(get_price_history_service),
-):
-    response = await priceHistoryService.get_prices_by_market("68c08ee044b631d7a81d5907")
+):  
+    response = await priceHistoryService.get_prices_by_market(data)
 
     return ResponseModel(
         success=True,
