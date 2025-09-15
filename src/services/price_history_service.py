@@ -1,5 +1,6 @@
 from bson import ObjectId
 from common.utils.price_utils import parse_price
+from logger import configure_logger
 from repositories.price_history_repository import PriceHistoryRepository
 from schemas.price_history import (
     PriceHistoryCreateSchema,
@@ -12,9 +13,9 @@ from services.product_service import ProductService
 from services.marketplace_service import MarketplaceService
 from services.product_market_service import ProductMarketService
 
-
 from playwright.async_api import async_playwright
 
+logger = configure_logger()
 
 class PriceHistoryService:
 
@@ -30,6 +31,45 @@ class PriceHistoryService:
         self.product_service = product_service
         self.marketplace_service = marketplace_service
         self.product_market_service = product_market_service
+
+
+    async def get_prices_by_market(self, data: SyncPricesByMarketSchema):
+        
+        logger.info('initialize get_prices_by_market')
+
+        results = await self.product_market_service.get_products_by_marketplace_agg(
+            data.marketplace_id
+        )
+
+        products = [
+            {
+                "url": item["product_url"],
+                "selectors": item["marketplace_css_selectors"],
+                "product_market_id": item["_id"],
+            }
+            for item in results
+        ]
+
+        print('products by marketplace mapping', results)
+        prices_by_market = await self.scrape_all(products)
+        print('scrapper - products by marketplace mapping', prices_by_market)
+
+        for item in prices_by_market:
+            item["price_discount"] = parse_price(item.get("price_discount"))
+
+        print('scrapper normalize prices - products by marketplace mapping', prices_by_market)
+
+        data_map = [
+            {
+                "product_market_id": item["product_market_id"],
+                "price_discount": item["price_discount"],
+            }
+            for item in prices_by_market
+        ]
+
+        print('scrapper normalize prices - data_map', prices_by_market)
+        await self.repository.save_batch(data_map)
+        return True
 
     async def scrape_all(self, products: list[dict]):
         results = []
@@ -64,36 +104,6 @@ class PriceHistoryService:
 
         return results
 
-    async def get_prices_by_market(self, data: SyncPricesByMarketSchema):
-
-        results = await self.product_market_service.get_products_by_marketplace_agg(
-            data.marketplace_id
-        )
-
-        products = [
-            {
-                "url": item["product_url"],
-                "selectors": item["marketplace_css_selectors"],
-                "product_market_id": item["_id"],
-            }
-            for item in results
-        ]
-
-        prices_by_market = await self.scrape_all(products)
-
-        for item in prices_by_market:
-            item["price_discount"] = parse_price(item.get("price_discount"))
-
-        data_map = [
-            {
-                "product_market_id": item["product_market_id"],
-                "price_discount": item["price_discount"],
-            }
-            for item in prices_by_market
-        ]
-
-        await self.repository.save_batch(data_map)
-        return True
 
     async def delete(self, test_id: str):
         return await self.repository.delete(test_id)

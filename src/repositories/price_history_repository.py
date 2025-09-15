@@ -23,7 +23,11 @@ class PriceHistoryRepository:
 
         try:
             documents = [PriceHistoryEntity(**item) for item in data]
+
+            print('save_batch documents', documents )
             result = await PriceHistoryEntity.insert_many(documents)
+            print('response', result )
+
             return result
 
         except ValidationError as ve:
