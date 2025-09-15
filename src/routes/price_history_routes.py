@@ -45,7 +45,7 @@ def get_price_history_service(
     )
 
 @router.post("/", response_model=ResponseModel)
-async def sync_prices_by_MarketSchema(
+async def sync_prices_by_market(
     data: SyncPricesByMarketSchema,
     priceHistoryService: PriceHistoryService = Depends(get_price_history_service),
 ):  
