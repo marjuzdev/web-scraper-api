@@ -3,14 +3,14 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from schemas.product import ProductSchema
 from services.product_service import ProductService
-from database.config import get_database
+from database import MongoDBMotor
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
 @router.get("/{product_id}")
 async def get_product(
     product_id: str,
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    db: AsyncIOMotorDatabase = Depends(MongoDBMotor.get_database)
 ):
     try:
         service = ProductService(db)
@@ -24,10 +24,19 @@ async def get_product(
 @router.post("/")
 async def create_product(
     product: ProductSchema,
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    db: AsyncIOMotorDatabase = Depends(MongoDBMotor.get_database)
 ):
     service = ProductService(db)
     result = await service.create_product(product)
+    return {"message": "Producto registrado con éxito", "product": result}
+
+
+@router.get("/")
+async def get_all(
+    db: AsyncIOMotorDatabase = Depends(MongoDBMotor.get_database)
+):
+    service = ProductService(db)
+    result = await service.get_all()
     return {"message": "Producto registrado con éxito", "product": result}
 
 

@@ -1,6 +1,9 @@
 from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId, errors
+from logger import configure_logger
+
+logger = configure_logger()
 
 class ProductRepository:
 
@@ -28,6 +31,21 @@ class ProductRepository:
             if isinstance(error, HTTPException):
                 raise error
             raise HTTPException(status_code=500, detail="Error al buscar el producto")
+        
+    
+    async def get_all(self):
+        try:
+            
+            docs = await self.collection.find().to_list()
+            return [
+                {**doc, "_id": str(doc["_id"])} 
+                if "_id" in doc and isinstance(doc["_id"], ObjectId) else doc
+                for doc in docs
+            ]
+        
+        except Exception:
+            logger.exception("Unexpected error while listing products")
+            raise HTTPException(status_code=500, detail="Failed to list products")
     
 
 
