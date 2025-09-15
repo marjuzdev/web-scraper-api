@@ -82,7 +82,7 @@ class PriceHistoryService:
         prices_by_market = await self.scrape_all(products)
 
         for item in prices_by_market:
-            item["price_discount"] = parse_price(item["price_discount"])
+            item["price_discount"] = parse_price(item.get("price_discount"))
 
         data_map = [
             {
@@ -91,9 +91,9 @@ class PriceHistoryService:
             }
             for item in prices_by_market
         ]
+
         await self.repository.save_batch(data_map)
         return True
-
 
     async def delete(self, test_id: str):
         return await self.repository.delete(test_id)
