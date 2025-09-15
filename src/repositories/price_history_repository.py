@@ -1,7 +1,9 @@
+from typing import Dict, List
 from beanie import PydanticObjectId
 from fastapi import HTTPException
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pydantic import ValidationError
 from logger import configure_logger
 from entities.price_history_entity import PriceHistoryEntity
 
@@ -12,9 +14,27 @@ class PriceHistoryRepository:
     def __init__(self, db: AsyncIOMotorDatabase = None):
         self.collection = db["price_history"] if db is not None else None
 
-    # -----------------------------
-    # CRUD con Beanie
-    # -----------------------------
+
+    async def save_batch(self, data: List[Dict]):
+
+        if not data:
+            logger.warning("Attempted to save an empty batch in PriceHistory")
+            return []
+
+        try:
+            documents = [PriceHistoryEntity(**item) for item in data]
+            result = await PriceHistoryEntity.insert_many(documents)
+            return result
+
+        except ValidationError as ve:
+            logger.error(f"Validation error in input data: {ve}")
+            raise ValueError("Invalid data for PriceHistoryEntity") from ve
+        
+        except Exception as e:
+            logger.exception(f"Unexpected error while saving batch: {e}")
+            raise
+
+
     async def save(self, entity: dict):
         try:
             existing = await PriceHistoryEntity.find_one(PriceHistoryEntity.name == entity.get("name"))

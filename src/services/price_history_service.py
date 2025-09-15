@@ -1,4 +1,5 @@
 from bson import ObjectId
+from common.utils.price_utils import parse_price
 from repositories.price_history_repository import PriceHistoryRepository
 from schemas.price_history import (
     PriceHistoryCreateSchema,
@@ -30,48 +31,69 @@ class PriceHistoryService:
         self.marketplace_service = marketplace_service
         self.product_market_service = product_market_service
 
-    async def scrape_all(self, products):
+    async def scrape_all(self, products: list[dict]):
         results = []
+
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()  # Usamos **una sola pestaña**
-            
+            page = await browser.new_page()
+
             for product in products:
                 url = product["url"]
                 selectors = product["selectors"]
+                product_id = product.get("product_market_id")
+
+                data = {"url": url, "product_market_id": product_id}
                 try:
                     await page.goto(url)
-                    data = {"url": url}
 
-                    if selectors.get("price_normal"):
-                        el = await page.query_selector(selectors["price_normal"])
-                        data["price_normal"] = await el.inner_text() if el else None
-
-                    if selectors.get("price_discount"):
-                        el = await page.query_selector(selectors["price_discount"])
-                        data["price_discount"] = await el.inner_text() if el else None
-
-                    results.append(data)
+                    # Recorremos dinámicamente los selectores
+                    for key, selector in selectors.items():
+                        if not selector:
+                            data[key] = None
+                            continue
+                        el = await page.query_selector(selector)
+                        data[key] = await el.inner_text() if el else None
 
                 except Exception as e:
-                    results.append({"url": url, "error": str(e)})
+                    data["error"] = str(e)
+
+                results.append(data)
 
             await browser.close()
+
         return results
 
     async def get_prices_by_market(self, data: SyncPricesByMarketSchema):
 
-        data = data.model_dump(exclude_unset=True)
-
-        marketplace_id = data['marketplace_id']
-        
         results = await self.product_market_service.get_products_by_marketplace_agg(
-            marketplace_id
+            data.marketplace_id
         )
 
-        products = list(map(lambda data: {'url': data['product_url'], 'selectors': data['marketplace_css_selectors']}, results))
-        result= await self.scrape_all(products)
-        return result
+        products = [
+            {
+                "url": item["product_url"],
+                "selectors": item["marketplace_css_selectors"],
+                "product_market_id": item["_id"],
+            }
+            for item in results
+        ]
+
+        prices_by_market = await self.scrape_all(products)
+
+        for item in prices_by_market:
+            item["price_discount"] = parse_price(item["price_discount"])
+
+        data_map = [
+            {
+                "product_market_id": item["product_market_id"],
+                "price_discount": item["price_discount"],
+            }
+            for item in prices_by_market
+        ]
+        await self.repository.save_batch(data_map)
+        return True
+
 
     async def delete(self, test_id: str):
         return await self.repository.delete(test_id)

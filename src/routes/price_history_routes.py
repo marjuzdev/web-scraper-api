@@ -53,7 +53,7 @@ async def sync_prices_by_MarketSchema(
 
     return ResponseModel(
         success=True,
-        message="Prices obtenidos correctamente",
+        message="Precios sincronizados correctamente",
         data=response,
         errors=None,
     )
