@@ -5,8 +5,9 @@ services:
     plan: free
     region: oregon 
     buildCommand: |
-      export PLAYWRIGHT_BROWSERS_PATH=0
       pip install -r requirements.txt
-      playwright install
-      ls ~/.cache/ms-playwright
-    startCommand: PLAYWRIGHT_BROWSERS_PATH=0 PYTHONPATH=./src uvicorn src.main:app --host 0.0.0.0 --port $PORT
+      playwright install chromium
+    startCommand: |
+      PLAYWRIGHT_BROWSERS_PATH=0 \
+      PYTHONPATH=./src \
+      uvicorn src.main:app --host 0.0.0.0 --port $PORT
