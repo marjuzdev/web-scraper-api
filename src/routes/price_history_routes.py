@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from database import MongoDBMotor
+from logger import configure_logger
 from schemas.responses import ResponseModel
 from services.price_history_service import PriceHistoryService
 from schemas.price_history import (
@@ -10,6 +11,7 @@ from services.product_market_service import ProductMarketService
 from services.product_service import ProductService
 from services.marketplace_service import MarketplaceService
 
+logger = configure_logger()
 
 router = APIRouter(prefix="/price_history", tags=["PriceHistory"])
 
@@ -49,7 +51,10 @@ async def sync_prices_by_market(
     data: SyncPricesByMarketSchema,
     priceHistoryService: PriceHistoryService = Depends(get_price_history_service),
 ):  
+    logger.info('---> init sync_prices_by_market')
     response = await priceHistoryService.get_prices_by_market(data)
+    logger.info('---> end sync_prices_by_market')
+
 
     return ResponseModel(
         success=True,
