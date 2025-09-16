@@ -1,3 +1,4 @@
+import asyncio
 from bson import ObjectId
 from common.utils.price_utils import parse_price
 from logger import configure_logger
@@ -122,12 +123,12 @@ class PriceHistoryService:
                             print(f"🎯 Valor encontrado para '{key}': {data[key]}")
                         except Exception:
                             data[key] = None
-                            print(f"⚠️ No se pudo obtener '{key}' para {url}")
-
+                            print(f"⚠️ No se pudo obtener '{key}' para {url}")        
                 except Exception as e:
                     data["error"] = str(e)
                     print(f"🔥 Error durante scraping de {url}: {e}")
 
+                await asyncio.sleep(0.5)
                 results.append(data)
 
             await browser.close()
