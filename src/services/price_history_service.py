@@ -75,25 +75,43 @@ class PriceHistoryService:
         results = []
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-setuid-sandbox"]
+            )
             page = await browser.new_page()
+
+            # Setear un user-agent realista
+            await page.set_user_agent(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0 Safari/537.36"
+            )
 
             for product in products:
                 url = product["url"]
-                selectors = product["selectors"]
+                selectors = product.get("selectors", {})
                 product_id = product.get("product_market_id")
 
                 data = {"url": url, "product_market_id": product_id}
+
                 try:
-                    await page.goto(url)
+                    # Ir a la página (esperando solo DOMContentLoaded)
+                    await page.goto(url, wait_until="domcontentloaded", timeout=60000)
 
                     # Recorremos dinámicamente los selectores
                     for key, selector in selectors.items():
                         if not selector:
                             data[key] = None
                             continue
-                        el = await page.query_selector(selector)
-                        data[key] = await el.inner_text() if el else None
+
+                        try:
+                            # Esperamos explícitamente que aparezca el selector
+                            await page.wait_for_selector(selector, timeout=15000)
+                            el = await page.query_selector(selector)
+                            data[key] = await el.inner_text() if el else None
+                        except Exception:
+                            data[key] = None  # si falla, lo dejamos en None
 
                 except Exception as e:
                     data["error"] = str(e)
@@ -103,7 +121,6 @@ class PriceHistoryService:
             await browser.close()
 
         return results
-
 
     async def delete(self, test_id: str):
         return await self.repository.delete(test_id)
