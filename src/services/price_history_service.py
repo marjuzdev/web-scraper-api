@@ -71,6 +71,7 @@ class PriceHistoryService:
         await self.repository.save_batch(data_map)
         return True
 
+
     async def scrape_all(self, products: list[dict]):
         results = []
 
@@ -79,14 +80,16 @@ class PriceHistoryService:
                 headless=True,
                 args=["--no-sandbox", "--disable-setuid-sandbox"]
             )
-            page = await browser.new_page()
 
-            # Setear un user-agent realista
-            await page.set_user_agent(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0 Safari/537.36"
+            # Creamos un contexto con user-agent
+            context = await browser.new_context(
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/120.0 Safari/537.36"
+                )
             )
+            page = await context.new_page()
 
             for product in products:
                 url = product["url"]
@@ -121,6 +124,7 @@ class PriceHistoryService:
             await browser.close()
 
         return results
+
 
     async def delete(self, test_id: str):
         return await self.repository.delete(test_id)
