@@ -76,53 +76,64 @@ class PriceHistoryService:
         results = []
 
         async with async_playwright() as p:
+            print("🟢 Playwright iniciado")
             browser = await p.chromium.launch(
                 headless=True,
-                args=["--no-sandbox", "--disable-setuid-sandbox"]
+                args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage",
+                    "--disable-gpu", "--disable-software-rasterizer"]
             )
+            print("🌐 Navegador Chromium lanzado")
 
-            # Creamos un contexto con user-agent
             context = await browser.new_context(
                 user_agent=(
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                     "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/120.0 Safari/537.36"
+                    "Chrome/140.0.0.0 Safari/537.36"
                 )
             )
+            print("📂 Contexto de navegador creado con User-Agent")
+
             page = await context.new_page()
+            print("📄 Nueva pestaña abierta")
 
             for product in products:
-                url = product["url"]
+                url = product.get("url")
                 selectors = product.get("selectors", {})
                 product_id = product.get("product_market_id")
-
                 data = {"url": url, "product_market_id": product_id}
 
+                print(f"🚀 Iniciando scraping de: {url}")
                 try:
-                    # Ir a la página (esperando solo DOMContentLoaded)
                     await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+                    print(f"✅ Página cargada correctamente: {url}")
 
-                    # Recorremos dinámicamente los selectores
+                    await page.wait_for_timeout(2000)  # espera extra si la página usa Render
+
                     for key, selector in selectors.items():
                         if not selector:
                             data[key] = None
                             continue
 
+                        print(f"🔍 Buscando selector '{key}': {selector}")
                         try:
-                            # Esperamos explícitamente que aparezca el selector
                             await page.wait_for_selector(selector, timeout=15000)
                             el = await page.query_selector(selector)
                             data[key] = await el.inner_text() if el else None
+                            print(f"🎯 Valor encontrado para '{key}': {data[key]}")
                         except Exception:
-                            data[key] = None  # si falla, lo dejamos en None
+                            data[key] = None
+                            print(f"⚠️ No se pudo obtener '{key}' para {url}")
 
                 except Exception as e:
                     data["error"] = str(e)
+                    print(f"🔥 Error durante scraping de {url}: {e}")
 
                 results.append(data)
 
             await browser.close()
+            print("🛑 Navegador cerrado")
 
+        print("🏁 Proceso finalizado, resultados listos")
         return results
 
 
